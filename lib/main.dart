@@ -16,10 +16,18 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<StorageService>.value(value: storage),
         ChangeNotifierProvider(create: (_) => MarketProvider()),
-        ChangeNotifierProvider(create: (_) => WatchlistProvider()),
-        ChangeNotifierProvider(create: (_) => TradeProvider()..loadData()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()..loadSettings()),
+        ChangeNotifierProvider(
+          create: (ctx) => WatchlistProvider(storage: ctx.read<StorageService>()),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => TradeProvider(storage: ctx.read<StorageService>())..loadData(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) =>
+              SettingsProvider(storage: ctx.read<StorageService>())..loadSettings(),
+        ),
       ],
       child: const StockApp(),
     ),

@@ -6,9 +6,11 @@ import '../services/fund_api_service.dart';
 import '../services/storage_service.dart';
 
 class WatchlistProvider extends ChangeNotifier {
+  final StorageService _storage;
   final SinaApiService _sinaApi = SinaApiService();
   final FundApiService _fundApi = FundApiService();
-  final StorageService _storage = StorageService();
+
+  WatchlistProvider({required StorageService storage}) : _storage = storage;
 
   List<String> _stockCodes = [];
   List<String> _fundCodes = [];
@@ -59,7 +61,8 @@ class WatchlistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  static final _stockCodePattern = RegExp(r'^(sh|sz|hk)[a-z]?\d{5,6}$', caseSensitive: false);
+  static final _stockCodePattern =
+      RegExp(r'^(sh|sz|hk)[a-z]?\d{5,6}$', caseSensitive: false);
 
   static bool isValidCode(String code) {
     return _stockCodePattern.hasMatch(code.trim());

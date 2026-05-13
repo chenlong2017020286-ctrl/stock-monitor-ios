@@ -5,7 +5,9 @@ import '../models/trading_account.dart';
 import '../services/storage_service.dart';
 
 class TradeProvider extends ChangeNotifier {
-  final StorageService _storage = StorageService();
+  final StorageService _storage;
+
+  TradeProvider({required StorageService storage}) : _storage = storage;
 
   double _availableCash = 100000;
   double _initialCapital = 100000;
@@ -21,7 +23,8 @@ class TradeProvider extends ChangeNotifier {
   double get totalProfitLossPercent => _buildAccount().totalProfitLossPercent;
 
   TradingAccount _buildAccount() {
-    final marketValue = _positions.fold<double>(0, (sum, p) => sum + p.marketValue);
+    final marketValue =
+        _positions.fold<double>(0, (sum, p) => sum + p.marketValue);
     final totalAsset = _availableCash + marketValue;
     return TradingAccount(
       initialCapital: _initialCapital,
@@ -44,7 +47,6 @@ class TradeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 买入股票
   Future<bool> buy({
     required String code,
     required String name,
@@ -57,7 +59,6 @@ class TradeProvider extends ChangeNotifier {
     if (totalAmount > _availableCash) return false;
     if (quantity <= 0) return false;
 
-    // 扣减现金
     _availableCash -= totalAmount;
 
     final order = Order(
@@ -74,7 +75,6 @@ class TradeProvider extends ChangeNotifier {
     );
     _orders.insert(0, order);
 
-    // 更新持仓
     final existIdx = _positions.indexWhere((p) => p.code == code);
     if (existIdx >= 0) {
       final old = _positions[existIdx];
@@ -113,7 +113,6 @@ class TradeProvider extends ChangeNotifier {
     return true;
   }
 
-  /// 卖出股票
   Future<bool> sell({
     required String code,
     required double price,
@@ -127,8 +126,6 @@ class TradeProvider extends ChangeNotifier {
     if (quantity <= 0) return false;
 
     final totalAmount = price * quantity;
-
-    // 增加现金
     _availableCash += totalAmount;
 
     final order = Order(
@@ -145,7 +142,6 @@ class TradeProvider extends ChangeNotifier {
     );
     _orders.insert(0, order);
 
-    // 更新持仓 — 部分卖出时保留原有 currentPrice
     if (pos.quantity == quantity) {
       _positions.removeAt(idx);
     } else {
@@ -159,7 +155,8 @@ class TradeProvider extends ChangeNotifier {
         currentPrice: pos.currentPrice,
         marketValue: pos.currentPrice * newQuantity,
         profitLoss: (pos.currentPrice - pos.avgCost) * newQuantity,
-        profitLossPercent: (pos.currentPrice - pos.avgCost) / pos.avgCost * 100,
+        profitLossPercent:
+            (pos.currentPrice - pos.avgCost) / pos.avgCost * 100,
         market: pos.market,
       );
     }
@@ -169,7 +166,6 @@ class TradeProvider extends ChangeNotifier {
     return true;
   }
 
-  /// 更新持仓的当前价格
   void updatePositionPrices(Map<String, double> prices) {
     for (var i = 0; i < _positions.length; i++) {
       final pos = _positions[i];
@@ -179,14 +175,14 @@ class TradeProvider extends ChangeNotifier {
           currentPrice: newPrice,
           marketValue: newPrice * pos.quantity,
           profitLoss: (newPrice - pos.avgCost) * pos.quantity,
-          profitLossPercent: (newPrice - pos.avgCost) / pos.avgCost * 100,
+          profitLossPercent:
+              (newPrice - pos.avgCost) / pos.avgCost * 100,
         );
       }
     }
     notifyListeners();
   }
 
-  /// 重置模拟账户
   Future<void> resetAccount(double initialCapital) async {
     _initialCapital = initialCapital;
     _availableCash = initialCapital;

@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import '../services/storage_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
-  final StorageService _storage = StorageService();
+  final StorageService _storage;
+
+  SettingsProvider({required StorageService storage}) : _storage = storage;
 
   double _initialCapital = 100000;
   int _refreshInterval = 5;

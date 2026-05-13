@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/position.dart';
 import '../models/order.dart';
@@ -11,12 +12,14 @@ class StorageService {
   static const _accountBox = 'account';
   static const _settingsBox = 'settings';
 
-  late Box _stockWatchlistBoxInstance;
-  late Box _fundWatchlistBoxInstance;
-  late Box _positionsBoxInstance;
-  late Box _ordersBoxInstance;
-  late Box _accountBoxInstance;
-  late Box _settingsBoxInstance;
+  Box? _stockWatchlistBoxInstance;
+  Box? _fundWatchlistBoxInstance;
+  Box? _positionsBoxInstance;
+  Box? _ordersBoxInstance;
+  Box? _accountBoxInstance;
+  Box? _settingsBoxInstance;
+
+  bool _initialized = false;
 
   Future<void> init() async {
     try {
@@ -27,36 +30,43 @@ class StorageService {
       _ordersBoxInstance = await Hive.openBox(_ordersBox);
       _accountBoxInstance = await Hive.openBox(_accountBox);
       _settingsBoxInstance = await Hive.openBox(_settingsBox);
-    } on Exception {
-      // 初始化失败时使用默认值，由调用方处理
+      _initialized = true;
+    } on Exception catch (e) {
+      debugPrint('Hive初始化失败: $e');
+      _initialized = false;
     }
   }
 
   // --- 股票自选 ---
   List<String> getStockWatchlist() {
-    final data = _stockWatchlistBoxInstance.get('codes');
+    if (!_initialized || _stockWatchlistBoxInstance == null) return [];
+    final data = _stockWatchlistBoxInstance!.get('codes');
     if (data == null) return [];
     return (data as List).cast<String>();
   }
 
   Future<void> saveStockWatchlist(List<String> codes) {
-    return _stockWatchlistBoxInstance.put('codes', codes);
+    if (!_initialized || _stockWatchlistBoxInstance == null) return Future.value();
+    return _stockWatchlistBoxInstance!.put('codes', codes);
   }
 
   // --- 基金自选 ---
   List<String> getFundWatchlist() {
-    final data = _fundWatchlistBoxInstance.get('codes');
+    if (!_initialized || _fundWatchlistBoxInstance == null) return [];
+    final data = _fundWatchlistBoxInstance!.get('codes');
     if (data == null) return [];
     return (data as List).cast<String>();
   }
 
   Future<void> saveFundWatchlist(List<String> codes) {
-    return _fundWatchlistBoxInstance.put('codes', codes);
+    if (!_initialized || _fundWatchlistBoxInstance == null) return Future.value();
+    return _fundWatchlistBoxInstance!.put('codes', codes);
   }
 
   // --- 持仓 ---
   List<Position> getPositions() {
-    final data = _positionsBoxInstance.get('data');
+    if (!_initialized || _positionsBoxInstance == null) return [];
+    final data = _positionsBoxInstance!.get('data');
     if (data == null) return [];
     return (data['positions'] as List? ?? [])
         .map((e) => Position.fromJson(Map<String, dynamic>.from(e)))
@@ -64,14 +74,16 @@ class StorageService {
   }
 
   Future<void> savePositions(List<Position> positions) {
-    return _positionsBoxInstance.put('data', {
+    if (!_initialized || _positionsBoxInstance == null) return Future.value();
+    return _positionsBoxInstance!.put('data', {
       'positions': positions.map((e) => e.toJson()).toList(),
     });
   }
 
   // --- 订单 ---
   List<Order> getOrders() {
-    final data = _ordersBoxInstance.get('data');
+    if (!_initialized || _ordersBoxInstance == null) return [];
+    final data = _ordersBoxInstance!.get('data');
     if (data == null) return [];
     return (data['orders'] as List? ?? [])
         .map((e) => Order.fromJson(Map<String, dynamic>.from(e)))
@@ -79,14 +91,25 @@ class StorageService {
   }
 
   Future<void> saveOrders(List<Order> orders) {
-    return _ordersBoxInstance.put('data', {
+    if (!_initialized || _ordersBoxInstance == null) return Future.value();
+    return _ordersBoxInstance!.put('data', {
       'orders': orders.map((e) => e.toJson()).toList(),
     });
   }
 
   // --- 账户 ---
   TradingAccount getAccount() {
-    final data = _accountBoxInstance.get('data');
+    if (!_initialized || _accountBoxInstance == null) {
+      return const TradingAccount(
+        initialCapital: 100000,
+        availableCash: 100000,
+        totalMarketValue: 0,
+        totalAsset: 100000,
+        totalProfitLoss: 0,
+        totalProfitLossPercent: 0,
+      );
+    }
+    final data = _accountBoxInstance!.get('data');
     if (data == null) {
       return const TradingAccount(
         initialCapital: 100000,
@@ -101,23 +124,29 @@ class StorageService {
   }
 
   Future<void> saveAccount(TradingAccount account) {
-    return _accountBoxInstance.put('data', account.toJson());
+    if (!_initialized || _accountBoxInstance == null) return Future.value();
+    return _accountBoxInstance!.put('data', account.toJson());
   }
 
   // --- 设置 ---
   double getInitialCapital() {
-    return (_settingsBoxInstance.get('initialCapital')?['value'] ?? 100000).toDouble();
+    if (!_initialized || _settingsBoxInstance == null) return 100000;
+    return (_settingsBoxInstance!.get('initialCapital')?['value'] ?? 100000)
+        .toDouble();
   }
 
   Future<void> saveInitialCapital(double value) {
-    return _settingsBoxInstance.put('initialCapital', {'value': value});
+    if (!_initialized || _settingsBoxInstance == null) return Future.value();
+    return _settingsBoxInstance!.put('initialCapital', {'value': value});
   }
 
   int getRefreshInterval() {
-    return _settingsBoxInstance.get('refreshInterval')?['value'] ?? 5;
+    if (!_initialized || _settingsBoxInstance == null) return 5;
+    return _settingsBoxInstance!.get('refreshInterval')?['value'] ?? 5;
   }
 
   Future<void> saveRefreshInterval(int seconds) {
-    return _settingsBoxInstance.put('refreshInterval', {'value': seconds});
+    if (!_initialized || _settingsBoxInstance == null) return Future.value();
+    return _settingsBoxInstance!.put('refreshInterval', {'value': seconds});
   }
 }
