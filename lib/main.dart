@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'app.dart';
 import 'services/storage_service.dart';
 import 'providers/market_provider.dart';

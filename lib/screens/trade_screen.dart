@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/order.dart';
 import '../providers/trade_provider.dart';
 import '../widgets/position_card.dart';
 

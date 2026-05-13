@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_app/models/stock_quote.dart';
-import 'package:stock_app/models/position.dart';
-import 'package:stock_app/models/order.dart';
 import 'package:stock_app/models/fund_quote.dart';
 import 'package:stock_app/providers/watchlist_provider.dart';
 import 'package:stock_app/providers/trade_provider.dart';
