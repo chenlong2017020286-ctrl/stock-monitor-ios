@@ -11,7 +11,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final storage = StorageService();
-  await storage.init();
+  try {
+    await storage.init();
+  } catch (e) {
+    // 即使 Hive 初始化失败，也要启动 App（离线模式）
+    debugPrint('Storage init failed: $e');
+  }
 
   runApp(
     MultiProvider(

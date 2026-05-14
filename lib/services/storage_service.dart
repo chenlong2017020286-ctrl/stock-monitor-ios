@@ -31,7 +31,7 @@ class StorageService {
       _accountBoxInstance = await Hive.openBox(_accountBox);
       _settingsBoxInstance = await Hive.openBox(_settingsBox);
       _initialized = true;
-    } on Exception catch (e) {
+    } catch (e) {
       debugPrint('Hive初始化失败: $e');
       _initialized = false;
     }
